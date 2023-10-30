@@ -1,30 +1,49 @@
-var http = require('http');
-var url = require('url');
-var fs = require('fs');
+const express = require("express");
+const app = express();
+const port = 8080;
 
-http.createServer(function (req, res) {
-  var q = url.parse(req.url, true);
-  let filename = "src";
+const fs = require("fs");
 
-  if (q.pathname === "/") {
-    filename = filename + "/index.html";
-  } else {
-    filename = filename + q.pathname + ".html";
-  }
-
-  fs.readFile(filename, function(err, data) {
+app.get("/", (req, res) => {
+  fs.readFile("index.html", function(err, data) {
     if (err) {
       return;
-    } 
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write(data);
-    return res.end();
-  });
+    }
 
-  fs.readFile("src/404.html", function(err, data) {
-    res.writeHead(404, {'Content-Type': 'text/html'});
-    res.write(data);
-    return res.end();
-  });
-  
-}).listen(8080);
+    res.set("Content-Type", "text/html");
+    res.status(200).send(data);
+  })
+
+});
+
+app.get("/:page?", (req, res) => {
+  if (!req.params.page) {
+    return;
+  };
+
+  fs.readFile(req.params.page + ".html", function(err, data) {
+    if (err) {
+      return;
+    }
+
+    res.set("Content-Type", "text/html");
+    res.status(200).send(data);
+  })
+});
+
+
+app.get("*", (req, res) => {
+  fs.readFile("404.html", function(err, data) {
+    if (err) {
+      res.status(404).send("complete failure");
+    }
+
+    res.set("Content-Type", "text/html");
+    res.status(404).send(data);
+  })
+});
+
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}!`);
+});
